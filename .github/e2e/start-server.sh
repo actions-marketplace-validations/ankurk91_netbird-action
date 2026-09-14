@@ -12,6 +12,10 @@ CONFIG="${GITHUB_WORKSPACE:-$PWD}/.github/e2e/config.yaml"
 # NB_SETUP_PAT_ENABLED opens /api/setup, which creates the first owner and hands
 # back a token without anyone logging in. It is the only way to bootstrap the
 # server unattended, and it closes itself once an account exists.
+# NB_DISABLE_GEOLOCATION because the server otherwise downloads the MaxMind
+# GeoLite2 database on first boot and calls log.Fatal on any failure - an
+# upstream checksum mismatch is enough to kill the whole job. Nothing here
+# geolocates a peer.
 # dataDir has to exist before the server starts - it creates the SQLite file in
 # there, not the directory - and the image ships without it. tmpfs rather than a
 # volume: none of this outlives the job, and nothing is left on the runner.
@@ -19,6 +23,7 @@ echo '=== Starting the NetBird server ==='
 docker run --detach --name netbird-server \
   --network host \
   --env NB_SETUP_PAT_ENABLED=true \
+  --env NB_DISABLE_GEOLOCATION=true \
   --tmpfs /var/lib/netbird \
   --volume "$CONFIG:/etc/netbird/config.yaml:ro" \
   "$IMAGE" --config /etc/netbird/config.yaml
