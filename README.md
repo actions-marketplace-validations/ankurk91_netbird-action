@@ -97,7 +97,7 @@ There is no disconnect step to add — see [Cleanup](#cleanup).
 | `exit-node`           | no       | —                            | Network ID to route through. The route must be distributed to this peer's group.             |
 | `dns-hostnames`       | no       | —                            | Names that must resolve before the action finishes. See [Waiting for DNS](#waiting-for-dns). |
 | `dns-require-private` | no       | `true`                       | Only accept a `dns-hostnames` name that points inside your network.                          |
-| `args`                | no       | —                            | Extra flags appended to `netbird up`, split on whitespace.                                   |
+| `args`                | no       | —                            | Extra flags appended to `netbird up`, split on whitespace - one per line works.              |
 | `version`             | no       | `latest`                     | Client release to install. See [Client version](#client-version).                            |
 | `github-token`        | no       | `${{ github.token }}`        | Raises the API rate limit when `version` is pinned. Only sent then.                          |
 | `timeout`             | no       | `60`                         | Seconds to wait for the peer, the exit node route, and the DNS names.                        |

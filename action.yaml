@@ -31,7 +31,7 @@ inputs:
     required: false
     default: 'true'
   args:
-    description: 'Extra flags appended to `netbird up`, split on whitespace.'
+    description: 'Extra flags appended to `netbird up`, split on whitespace - one per line works.'
     required: false
     default: ''
   version:

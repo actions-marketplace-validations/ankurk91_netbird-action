@@ -19,6 +19,7 @@
 - `bash -n src/*.sh && shellcheck src/*.sh`
 - `node --check src/main.mjs && node --check src/post.mjs` — one file per call, see Traps.
 - `bash .github/e2e/test-dns-check.sh` — offline, ~20s (most of it deliberate timeout cases).
+- `bash .github/e2e/test-connect-args.sh` — offline, ~1s.
 - CI also runs `checkbashisms` and `actionlint`, which local runs usually skip.
 
 ## Traps

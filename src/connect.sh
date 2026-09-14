@@ -77,8 +77,10 @@ if [ -n "$PEER_NAME" ]; then
   up_args+=(--hostname "$PEER_NAME")
 fi
 
-# Whitespace is the only separator here, so an argument cannot contain one.
-read -r -a extra_args <<< "$EXTRA_ARGS"
+# Whitespace is the only separator here, so an argument cannot contain one. The
+# `tr` matters: `read -a` alone stops at the first newline and silently drops
+# every flag after it. Commas are left alone - flag values carry them.
+read -r -a extra_args <<< "$(printf '%s' "$EXTRA_ARGS" | tr '\n\t' '  ')"
 up_args+=("${extra_args[@]}")
 
 # A runner that manages its own client is already on a network, and the login
