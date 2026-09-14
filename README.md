@@ -119,7 +119,7 @@ Being connected is not the same as being able to resolve your private hostnames.
 service *by name*, list those names and the action waits until they work before it hands over:
 
 ```yaml
-- uses: ankurk91/netbird-action@v1
+- uses: ankurk91/netbird-action@v2
   with:
     setup-key: ${{ secrets.NETBIRD_SETUP_KEY }}
     dns-hostnames: postgres.netbird.cloud, internal-service.netbird.cloud
