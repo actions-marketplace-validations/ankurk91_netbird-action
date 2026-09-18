@@ -79,10 +79,8 @@ jobs:
         if: always()
         run: docker rm --force netbird-server
 
-  # What is left once the end-to-end job has covered the real resolver: answers
-  # no live network can be made to give, and input that never reaches DNS at
-  # all. Neither needs a server, so both run here in seconds rather than waiting
-  # on one to boot.
+  # Runs src/dns-check.sh against a stubbed resolver, for the answers a live
+  # network cannot be made to give and for input that never reaches DNS.
   dns-check:
     runs-on: ubuntu-latest
     timeout-minutes: 5

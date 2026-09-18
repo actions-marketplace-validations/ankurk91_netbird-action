@@ -158,7 +158,7 @@ dashboard does. Failures print an anonymised summary either way.
 
 ## Changelog
 
-Upgrading? See [CHANGELOG.md](CHANGELOG.md) — `v2` renames one input.
+Upgrading? See [CHANGELOG.md](CHANGELOG.md).
 
 ## Troubleshooting
 
