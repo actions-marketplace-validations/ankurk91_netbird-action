@@ -10,6 +10,8 @@ on:
       - dev
     paths:
       - '**.sh'
+      - '**.mjs'
+      - 'action.yaml'
       - '.github/workflows/**'
       - '.github/actionlint.yaml'
   pull_request:
@@ -18,6 +20,8 @@ on:
       - dev
     paths:
       - '**.sh'
+      - '**.mjs'
+      - 'action.yaml'
       - '.github/workflows/**'
       - '.github/actionlint.yaml'
 
@@ -37,11 +41,14 @@ jobs:
 
       - name: Run the sh-checker
         uses: luizm/action-sh-checker@v0.10.0
-        env:
-          SHFMT_OPTS: --simplify --keep-padding
         with:
           sh_checker_checkbashisms_enable: true
           sh_checker_shfmt_disable: true
+
+      # The action's entry points. Nothing here is bundled or has dependencies,
+      # so parsing them is the whole of what there is to check.
+      - name: Check the JavaScript parses
+        run: node --check src/main.mjs && node --check src/post.mjs
 
       - name: Install action-lint
         env:

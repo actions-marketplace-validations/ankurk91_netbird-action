@@ -5,7 +5,7 @@
 Only the newest release gets fixes. Pin the action to a major tag so you keep receiving them:
 
 ```yaml
-- uses: ankurk91/netbird-action@v1
+- uses: ankurk91/netbird-action@v2
 ```
 
 Pin to a full commit SHA instead if your threat model calls for it — a tag can be moved, a SHA cannot.

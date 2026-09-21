@@ -1,4 +1,4 @@
-name: 'Easy NetBird Connect'
+name: 'Setup NetBird'
 description: 'Install the NetBird client on an Ubuntu runner and join your network with a setup key.'
 author: 'ankurk91'
 
@@ -14,7 +14,7 @@ inputs:
     description: 'Management service URL [http|https]://[host]:[port]. Set this when you self-host NetBird.'
     required: false
     default: 'https://api.netbird.io:443'
-  hostname:
+  peer-name:
     description: 'Peer name shown in the NetBird dashboard.'
     required: false
     default: 'gh-${{ github.run_id }}-${{ github.run_attempt }}'
@@ -22,12 +22,20 @@ inputs:
     description: 'Network (route) ID to send traffic through once connected. Empty leaves the distributed routes as they are.'
     required: false
     default: ''
+  dns-hostnames:
+    description: 'Hostnames that must resolve before the action finishes, separated by commas or whitespace. Empty skips the check.'
+    required: false
+    default: ''
+  dns-require-private:
+    description: 'Reject a `dns-hostnames` answer that is publicly routable, in either address family - so every address must be in the NetBird range 100.64.0.0/10, RFC 1918, or IPv6 unique local fc00::/7. Set this false for a name that legitimately answers with a public address, such as one reached through an exit node.'
+    required: false
+    default: 'true'
   args:
-    description: 'Extra flags appended to `netbird up`, split on whitespace.'
+    description: 'Extra flags appended to `netbird up`, split on whitespace - one per line works.'
     required: false
     default: ''
   version:
-    description: 'NetBird client release to install, such as 0.77.1. Defaults to the newest release.'
+    description: 'NetBird client release to install, such as 0.78.1. Must be 0.67.0 or newer. Defaults to the newest release.'
     required: false
     default: 'latest'
   github-token:
@@ -35,9 +43,13 @@ inputs:
     required: false
     default: ${{ github.token }}
   timeout:
-    description: 'Seconds to wait for the peer to connect, and for the exit node route to reach it.'
+    description: 'Seconds allowed for each wait: the peer connecting, the exit node route reaching it, and the `dns-hostnames` resolving. The names share the third between them rather than getting one each.'
     required: false
     default: '60'
+  cleanup:
+    description: 'Deregister the peer and undo the install when the job ends. Off by default: a hosted runner is discarded anyway, and an ephemeral setup key drops the peer from the dashboard on its own. Turn it on for self-hosted runners, whose machine outlives the job.'
+    required: false
+    default: 'false'
   diagnostics:
     description: 'Print the peer state to the job log: netbird status, the routes and the public IP before and after connecting. Off by default.'
     required: false
@@ -46,27 +58,8 @@ inputs:
 outputs:
   netbird-ip:
     description: "The runner's IPv4 address inside the NetBird network, e.g. 100.64.0.33."
-    value: ${{ steps.connect.outputs.netbird-ip }}
 
 runs:
-  using: 'composite'
-  steps:
-    - name: Install NetBird
-      shell: bash
-      run: bash "${GITHUB_ACTION_PATH}/src/install.sh"
-      env:
-        INPUT_VERSION: ${{ inputs.version }}
-        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
-
-    - name: Connect to NetBird
-      id: connect
-      shell: bash
-      run: bash "${GITHUB_ACTION_PATH}/src/connect.sh"
-      env:
-        INPUT_SETUP_KEY: ${{ inputs.setup-key }}
-        INPUT_MANAGEMENT_URL: ${{ inputs.management-url }}
-        INPUT_HOSTNAME: ${{ inputs.hostname }}
-        INPUT_EXIT_NODE: ${{ inputs.exit-node }}
-        INPUT_ARGS: ${{ inputs.args }}
-        INPUT_TIMEOUT: ${{ inputs.timeout }}
-        INPUT_DIAGNOSTICS: ${{ inputs.diagnostics }}
+  using: 'node24'
+  main: 'src/main.mjs'
+  post: 'src/post.mjs'

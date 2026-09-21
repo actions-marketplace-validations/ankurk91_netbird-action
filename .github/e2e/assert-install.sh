@@ -25,7 +25,7 @@ if [ -z "$EXPECTED" ]; then
     --header 'X-GitHub-Api-Version: 2022-11-28' \
     "${auth[@]}" "$LATEST_URL")"
 
-  # Releases are tagged 'v0.77.1' while the client reports '0.77.1'.
+  # Releases are tagged 'v0.78.1' while the client reports '0.78.1'.
   EXPECTED="$(printf '%s' "$release" | jq -r '.tag_name // empty' | sed 's/^v//')"
 
   if [ -z "$EXPECTED" ]; then

@@ -53,8 +53,23 @@ jobs:
         env:
           NETBIRD_IP: ${{ steps.netbird.outputs.netbird-ip }}
           NETBIRD_PAT: ${{ steps.server.outputs.pat }}
-          PEER_HOSTNAME: gh-${{ github.run_id }}-${{ github.run_attempt }}
+          PEER_NAME: gh-${{ github.run_id }}-${{ github.run_attempt }}
         run: bash .github/e2e/assert-connected.sh
+
+      # Runs the action's own DNS wait against this network, so the input is
+      # exercised against a real resolver rather than only a stubbed one.
+      - name: Assert the DNS wait works here
+        env:
+          NETBIRD_IP: ${{ steps.netbird.outputs.netbird-ip }}
+        run: bash .github/e2e/assert-dns-check.sh
+
+      # Runs while the throwaway server is still up, so the assertion can ask it
+      # whether the peer is really gone rather than only asking the client.
+      - name: Assert the cleanup took the runner back off
+        env:
+          NETBIRD_IP: ${{ steps.netbird.outputs.netbird-ip }}
+          NETBIRD_PAT: ${{ steps.server.outputs.pat }}
+        run: bash .github/e2e/assert-cleaned.sh
 
       - name: Show the server side
         if: always()
@@ -63,6 +78,33 @@ jobs:
       - name: Remove the server
         if: always()
         run: docker rm --force netbird-server
+
+  # Runs src/dns-check.sh against a stubbed resolver, for the answers a live
+  # network cannot be made to give and for input that never reaches DNS.
+  dns-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Run the dns-check cases
+        run: bash .github/e2e/test-dns-check.sh
+
+  # The e2e job connects with no extra flags, so a flag list that lost entries on
+  # the way to the client would still connect and still pass there. Stubbing the
+  # client is the only way to see the argument list it was really given.
+  connect-args:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Run the connect args cases
+        run: bash .github/e2e/test-connect-args.sh
 
   # The e2e job above always installs whatever is newest, so the 'version' input
   # only gets exercised here. One architecture is enough: this is about which
@@ -83,8 +125,8 @@ jobs:
           # A real release that is not the newest, so a pass means the pin was
           # honoured rather than quietly ignored.
           - name: 'pinned'
-            version: '0.76.3'
-            expected: '0.76.3'
+            version: '0.77.1'
+            expected: '0.77.1'
 
     steps:
       - name: Checkout code

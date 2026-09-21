@@ -8,8 +8,11 @@ API_URL="${API_URL:-http://localhost:8081}"
 echo '=== What the client reports ==='
 sudo netbird status
 
-if ! sudo netbird status | grep -q 'Management: Connected'; then
-  echo '::error::the peer is not connected to management'
+# The same health check the action waits on: management and signal connected,
+# and a relay available. The server-side check further down is what keeps this
+# from being the action grading its own work.
+if ! sudo netbird status --check startup; then
+  echo '::error::the peer did not pass the startup health check'
   exit 1
 fi
 
@@ -43,8 +46,8 @@ printf '%s' "$peers" | jq -r '.[] | "name=\(.name)\thostname=\(.hostname)\t\(.ip
 # So this covers both the peer arriving and it arriving under the name the run
 # gave it, which is the action's default hostname.
 if ! printf '%s' "$peers" |
-  jq -e --arg h "$PEER_HOSTNAME" 'any(.[]; .hostname == $h or .name == $h)' > /dev/null; then
-  echo "::error::the server has no peer named '$PEER_HOSTNAME'"
+  jq -e --arg h "$PEER_NAME" 'any(.[]; .hostname == $h or .name == $h)' > /dev/null; then
+  echo "::error::the server has no peer named '$PEER_NAME'"
   exit 1
 fi
 
@@ -54,4 +57,4 @@ if ! printf '%s' "$peers" |
   exit 1
 fi
 
-echo "the server sees '$PEER_HOSTNAME' connected at $NETBIRD_IP"
+echo "the server sees '$PEER_NAME' connected at $NETBIRD_IP"

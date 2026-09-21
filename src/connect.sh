@@ -4,7 +4,7 @@ set -euo pipefail
 
 SETUP_KEY="${INPUT_SETUP_KEY:-}"
 MANAGEMENT_URL="${INPUT_MANAGEMENT_URL:-https://api.netbird.io:443}"
-PEER_HOSTNAME="${INPUT_HOSTNAME:-}"
+PEER_NAME="${INPUT_PEER_NAME:-}"
 EXIT_NODE="${INPUT_EXIT_NODE:-}"
 EXTRA_ARGS="${INPUT_ARGS:-}"
 TIMEOUT="${INPUT_TIMEOUT:-60}"
@@ -39,21 +39,29 @@ if [ "$TIMEOUT" -lt 1 ]; then
   exit 1
 fi
 
-public_ip() {
-  curl -4 -s --connect-timeout 5 --max-time 10 https://api.ipify.org || echo 'unavailable'
+# Read by diagnostics.sh, which runs later - by then an exit node may be carrying
+# the traffic, so it cannot take this reading itself.
+IP_BEFORE_FILE="${RUNNER_TEMP:-/tmp}/netbird-public-ip-before"
+
+# Read by the post step at the end of the job. See install.sh for why a missing
+# GITHUB_STATE is not an error.
+save_state() {
+  if [ -n "${GITHUB_STATE:-}" ]; then
+    printf '%s=%s\n' "$1" "$2" >> "$GITHUB_STATE"
+  fi
 }
 
 # The action fills this in from the run it belongs to, so it is only ever empty
 # when someone passes an empty string deliberately - which means the client
 # falls back to the runner's own hostname.
-if [ -n "$PEER_HOSTNAME" ] &&
-  ! [[ $PEER_HOSTNAME =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$ ]]; then
-  echo "::error::input 'hostname' is not a valid hostname: '$PEER_HOSTNAME'. Use letters, digits and hyphens, up to 63 characters, not starting or ending with a hyphen."
+if [ -n "$PEER_NAME" ] &&
+  ! [[ $PEER_NAME =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$ ]]; then
+  echo "::error::input 'peer-name' cannot be used as a peer name: '$PEER_NAME'. Use letters, digits and hyphens, up to 63 characters, not starting or ending with a hyphen."
   exit 1
 fi
 
 if [ "$DIAGNOSTICS" = 'true' ]; then
-  ip_before_netbird="$(public_ip)"
+  curl -4 -s --connect-timeout 3 --max-time 5 https://icanhazip.com > "$IP_BEFORE_FILE" || true
 fi
 
 # Passing the key as --setup-key would leave it in the process list, where any
@@ -65,15 +73,29 @@ printf '%s' "$SETUP_KEY" > "$key_file"
 
 up_args=(--setup-key-file "$key_file" --management-url "$MANAGEMENT_URL")
 
-if [ -n "$PEER_HOSTNAME" ]; then
-  up_args+=(--hostname "$PEER_HOSTNAME")
+if [ -n "$PEER_NAME" ]; then
+  up_args+=(--hostname "$PEER_NAME")
 fi
 
-# Whitespace is the only separator here, so an argument cannot contain one.
-read -r -a extra_args <<< "$EXTRA_ARGS"
+# Whitespace is the only separator here, so an argument cannot contain one. The
+# `tr` matters: `read -a` alone stops at the first newline and silently drops
+# every flag after it. Commas are left alone - flag values carry them.
+read -r -a extra_args <<< "$(printf '%s' "$EXTRA_ARGS" | tr '\n\t' '  ')"
 up_args+=("${extra_args[@]}")
 
-echo "=== Connecting as '${PEER_HOSTNAME:-$(hostname)}' ==="
+# A runner that manages its own client is already on a network, and the login
+# below replaces that session rather than adding to it. The cleanup cannot put it
+# back, so it says so instead of leaving the runner quietly off its own network.
+if sudo netbird status --check startup > /dev/null 2>&1; then
+  save_state NB_WAS_LOGGED_IN true
+fi
+
+# Recorded before the login rather than after it, because a login that fails
+# part-way can still have registered the peer, and that is exactly the case where
+# leaving it behind would matter.
+save_state NB_CONNECTED true
+
+echo "=== Connecting as '${PEER_NAME:-$(hostname)}' ==="
 sudo netbird up "${up_args[@]}"
 
 rm -f "$key_file"
@@ -85,10 +107,10 @@ trap - EXIT
 # peer that was merely registered.
 echo '=== Waiting for the peer to connect ==='
 for _ in $(seq "$TIMEOUT"); do
-  status="$(sudo netbird status 2>&1 || true)"
-
-  if printf '%s' "$status" | grep -q 'Management: Connected' &&
-    printf '%s' "$status" | grep -q 'Signal: Connected'; then
+  # 'startup' is management and signal both connected, plus a relay available
+  # when the network has any. It exits 0 or 1 and says which leg is missing, so
+  # nothing here depends on how the status report happens to be worded.
+  if check_error="$(sudo netbird status --check startup 2>&1)"; then
     connected=1
     break
   fi
@@ -97,7 +119,9 @@ for _ in $(seq "$TIMEOUT"); do
 done
 
 if [ -z "${connected:-}" ]; then
-  echo "::error::the peer did not reach the network within ${TIMEOUT}s. Check the setup key has not expired or hit its usage limit, and that the management URL is right."
+  # A GitHub annotation is one line, and the check writes its reason as its own.
+  reason="${check_error:-the daemon did not answer}"
+  echo "::error::the peer did not reach the network within ${TIMEOUT}s (${reason//$'\n'/ }). Check the setup key has not expired or hit its usage limit, and that the management URL is right."
   sudo netbird status -d -A || true
   exit 1
 fi
@@ -128,6 +152,7 @@ if [ -n "$EXIT_NODE" ]; then
   # Replaces the current selection, so from here the runner's traffic for that
   # network - the whole internet, for an exit node - goes through it.
   sudo netbird routes select "$EXIT_NODE"
+  save_state NB_EXIT_NODE "$EXIT_NODE"
   echo 'exit node selected'
 fi
 
@@ -137,28 +162,3 @@ netbird_ip="$(sudo netbird status -4 2> /dev/null || true)"
 netbird_ip="${netbird_ip%%/*}"
 echo "netbird-ip=${netbird_ip}" >> "$GITHUB_OUTPUT"
 
-# Everything below describes the network the runner just joined: the other peers
-# and their addresses, every route the peer holds, where its traffic now leaves
-# from. A job log is readable by more people than the dashboard is, so it is
-# printed only when asked for.
-if [ "$DIAGNOSTICS" = 'true' ]; then
-  echo
-  echo '=== NetBird IP ==='
-  echo "$netbird_ip"
-
-  echo
-  echo '=== NetBird status ==='
-  sudo netbird status -d
-
-  echo
-  echo '=== Networks ==='
-  sudo netbird routes ls
-
-  echo
-  echo '=== Routes ==='
-  ip route
-
-  echo
-  echo "Public IP before NetBird: $ip_before_netbird"
-  echo "Public IP after NetBird: $(public_ip)"
-fi

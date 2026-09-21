@@ -1,12 +1,34 @@
+# Editors and IDEs
 .idea/
 .vscode/
 .cursor/
-
-node_modules/
-
-*.log
-.env
 *.swp
-*.key
-.act/
+*~
+
+# Agent tooling
+# .claude/settings.json is shared on purpose; only the personal override is not.
+.claude/settings.local.json
+
+# macOS
 .DS_Store
+._*
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Running the workflows locally with nektos/act
+.act/
+.secrets
+
+# Secrets and local scratch
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.log
