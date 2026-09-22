@@ -9,4 +9,4 @@ dist/** linguist-generated=true
 .gitattributes export-ignore
 .gitignore export-ignore
 .github/ export-ignore
-CLAUDE.md export-ignore
+AGENTS.md export-ignore
