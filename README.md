@@ -1,8 +1,8 @@
 # Setup NetBird (GitHub Action)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/ankurk91/netbird-action/main/.github/banner.jpg?v=2"
-    alt="Setup NetBird - connect your GitHub Actions CI runners to your NetBird network" width="640">
+  <img src="https://raw.githubusercontent.com/ankurk91/netbird-action/main/.github/banner.jpg?v=3"
+    alt="Setup NetBird - connect your GitHub Actions CI runners to your NetBird network" width="100%">
 </p>
 
 [![tests](https://github.com/ankurk91/netbird-action/actions/workflows/tests.yaml/badge.svg)](https://github.com/ankurk91/netbird-action/actions)
@@ -154,7 +154,7 @@ Leave `version` at `latest` for the newest client, or pin it (`0.78.1`) to keep 
 `diagnostics: true` prints the peer's state to the job log while you work out why a connection is failing.
 
 It is off by default because that output describes your private network, and job logs reach more people than your
-dashboard does. Failures print an anonymised summary either way.
+dashboard does. Failures print an anonymized summary either way.
 
 ## Changelog
 

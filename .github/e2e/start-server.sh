@@ -6,7 +6,7 @@ set -euo pipefail
 API_URL="${API_URL:-http://localhost:8081}"
 # Pinned so an upstream release cannot turn a green run red on its own. Bump it
 # deliberately; 'latest' is one tag push away from breaking every branch at once.
-IMAGE="${NETBIRD_SERVER_IMAGE:-netbirdio/netbird-server:0.78.1}"
+IMAGE="${NETBIRD_SERVER_IMAGE:-netbirdio/netbird-server:0.79.0}"
 CONFIG="${GITHUB_WORKSPACE:-$PWD}/.github/e2e/config.yaml"
 
 # NB_SETUP_PAT_ENABLED opens /api/setup, which creates the first owner and hands
