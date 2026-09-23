@@ -4,3 +4,12 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: "docker-compose"
+    directory: "/.github/e2e"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
