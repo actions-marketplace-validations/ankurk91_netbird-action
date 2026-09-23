@@ -48,7 +48,9 @@ if [ -n "$EXIT_NODE" ]; then
   fi
 fi
 
-if [ "$CONNECTED" = 'true' ]; then
+if [ "$WAS_LOGGED_IN" = 'true' ]; then
+  echo '::warning::this runner was already connected to a NetBird network before the action ran, so the action reused that session and the cleanup leaves it connected. If a previous job left it, that job did not reach its own cleanup.'
+elif [ "$CONNECTED" = 'true' ]; then
   # connect.sh records the login before attempting it, so a peer that never came
   # up reaches here too. Its deregister fails rightly - only warn if one was live.
   if sudo netbird status --check startup > /dev/null 2>&1; then
@@ -94,11 +96,6 @@ elif [ "$SERVICE_STARTED" = 'true' ]; then
   else
     echo '::warning::could not stop the NetBird service'
   fi
-fi
-
-# Last, because it is the one thing here the action cannot put right itself.
-if [ "$WAS_LOGGED_IN" = 'true' ]; then
-  echo '::warning::this runner was already logged in to a NetBird network before the action ran. That session was replaced by the one the action created, and has now been ended - the runner is no longer on its original network. Log it back in, or keep this action off runners that manage their own NetBird client.'
 fi
 
 if [ "${#done_steps[@]}" -eq 0 ]; then

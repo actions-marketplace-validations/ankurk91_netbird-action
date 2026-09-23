@@ -83,9 +83,9 @@ fi
 read -r -a extra_args <<< "$(printf '%s' "$EXTRA_ARGS" | tr '\n\t' '  ')"
 up_args+=("${extra_args[@]}")
 
-# A runner that manages its own client is already on a network, and the login
-# below replaces that session rather than adding to it. The cleanup cannot put it
-# back, so it says so instead of leaving the runner quietly off its own network.
+# On a runner already connected, `netbird up` prints "Already connected" and keeps
+# that session: the key, URL and name below are never applied. The cleanup must
+# not deregister a peer the action did not create.
 if sudo netbird status --check startup > /dev/null 2>&1; then
   save_state NB_WAS_LOGGED_IN true
 fi
