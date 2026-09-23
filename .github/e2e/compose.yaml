@@ -1,0 +1,24 @@
+# Throwaway NetBird server for the e2e job. Lives here, not in start-server.sh,
+# so Dependabot can see and bump the image tag.
+services:
+  netbird-server:
+    # Pinned so an upstream release cannot turn a green run red on its own.
+    image: netbirdio/netbird-server:0.79.0
+    container_name: netbird-server
+    # Host network so localhost means the same thing to the server, its IdP and
+    # the client. See config.yaml.
+    network_mode: host
+    environment:
+      # Opens /api/setup: creates the first owner and returns a token without a
+      # login. Closes itself once an account exists.
+      NB_SETUP_PAT_ENABLED: 'true'
+      # Otherwise the server downloads GeoLite2 on first boot and calls
+      # log.Fatal on any failure, e.g. an upstream checksum mismatch.
+      NB_DISABLE_GEOLOCATION: 'true'
+    # dataDir must exist before start - the server creates the SQLite file, not
+    # the directory, and the image ships without it.
+    tmpfs:
+      - /var/lib/netbird
+    volumes:
+      - ./config.yaml:/etc/netbird/config.yaml:ro
+    command: ['--config', '/etc/netbird/config.yaml']
