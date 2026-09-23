@@ -133,8 +133,10 @@ if [ -n "$EXIT_NODE" ]; then
 
   # The route only exists on this peer once the management service has pushed a
   # network map naming it, which lands after the login the loop above waited on.
+  # Match the whole ID: a substring hit on `prod` would stop at `prod-exit`.
   for _ in $(seq "$TIMEOUT"); do
-    if sudo netbird routes ls | grep -qF "$EXIT_NODE"; then
+    if sudo netbird routes ls 2> /dev/null |
+      awk -v id="$EXIT_NODE" '$1 == "-" && $2 == "ID:" && $3 == id { found = 1 } END { exit !found }'; then
       route_available=1
       break
     fi
@@ -149,8 +151,8 @@ if [ -n "$EXIT_NODE" ]; then
     exit 1
   fi
 
-  # Replaces the current selection, so from here the runner's traffic for that
-  # network - the whole internet, for an exit node - goes through it.
+  # Replace, not --append: it keeps a single exit node on every client version,
+  # at the cost of deselecting the other networks this peer knows right now.
   sudo netbird routes select "$EXIT_NODE"
   save_state NB_EXIT_NODE "$EXIT_NODE"
   echo 'exit node selected'

@@ -87,6 +87,10 @@ There is no disconnect step to add — see [Cleanup](#cleanup).
 > An exit node carries `0.0.0.0/0`, so the runner's connection to GitHub goes through it too. If the exit node cannot
 > reach GitHub, the job hangs after this step rather than failing.
 
+> [!NOTE]
+> Selecting an exit node deselects the other networks the runner has received by then, so `exit-node` does not mix
+> with private network routes.
+
 ## Inputs
 
 | Input                 | Required | Default                      | Description                                                                                  |
