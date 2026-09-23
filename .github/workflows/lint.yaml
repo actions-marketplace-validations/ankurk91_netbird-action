@@ -32,9 +32,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-env:
-  ACTION_LINT_VERSION: "1.7.12"
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -55,23 +52,8 @@ jobs:
       - name: Check the JavaScript parses
         run: node --check src/main.mjs && node --check src/post.mjs
 
-      - name: Install action-lint
-        env:
-          LINT_VERSION: ${{ env.ACTION_LINT_VERSION }}
-          REMOTE_URL: "https://raw.githubusercontent.com/rhysd/actionlint/v${{ env.ACTION_LINT_VERSION }}/scripts/download-actionlint.bash"
-        run: |
-          INSTALL_DIR="${HOME}/.local/bin"
-          mkdir -p "$INSTALL_DIR"
-          curl -sfL \
-            --retry 3 \
-            --retry-delay 5 \
-            --connect-timeout 15 \
-            --max-time 60 \
-            "$REMOTE_URL" | bash -s -- "$LINT_VERSION" "$INSTALL_DIR"
-          echo "$INSTALL_DIR" >> "$GITHUB_PATH"
-
+      # The image bundles shellcheck; `-pyflakes=` turns off the Python check.
       - name: Lint GitHub Actions workflows
-        run: |
-          shellcheck --version
-          find .github/workflows -type f \( -name "*.yml" -o -name "*.yaml" \) -exec actionlint -color -pyflakes= {} +
-          echo "Linting finished."
+        uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color -pyflakes=
