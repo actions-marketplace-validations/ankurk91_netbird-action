@@ -15,8 +15,8 @@ INSTALLED="${STATE_NB_INSTALLED:-false}"
 SERVICE_STARTED="${STATE_NB_SERVICE_STARTED:-false}"
 WAS_LOGGED_IN="${STATE_NB_WAS_LOGGED_IN:-false}"
 
-# The e2e job runs this directly, then the post step runs it again. The marker
-# stops the second pass warning through commands that cannot work twice.
+# The e2e job runs this twice in a row. The marker stops the second pass warning
+# through commands that cannot work twice.
 MARKER="${RUNNER_TEMP:-/tmp}/netbird-action-cleaned"
 
 if [ -e "$MARKER" ]; then
