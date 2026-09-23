@@ -75,14 +75,13 @@ What counts as inside the network, and why the check works this way, is in
 
 ## Peers pile up in the dashboard
 
-Every run registers a new peer. The action's post-job step deregisters it when the job ends, so the usual cause is a run
-that never reached that step — a cancelled workflow, a runner killed outright, or a job that hit its timeout.
+Every run registers a new peer, and with the default `cleanup: false` the action leaves it registered. An **ephemeral**
+setup key removes it once it has been offline for ten minutes; a key that is not ephemeral leaves it for you to delete.
 
-Turn on **Ephemeral** for the setup key to catch those: an ephemeral peer is removed once it has been offline for ten
-minutes. A key that is not ephemeral leaves them in the dashboard to delete by hand.
-
-If peers pile up from runs that *did* finish, read the `Post` group for this action at the end of the job log — the
-cleanup says what it managed to do, and warns when it could not reach the management service to deregister.
+With `cleanup: true`, the post step deregisters it. A run that never reaches that step — a cancelled workflow, a runner
+killed outright, or a job that hit its timeout — still leaves its peer behind, so keep the key ephemeral. If peers pile
+up from runs that *did* finish, read the `Post` group for this action at the end of the job log — the cleanup says what
+it managed to do, and warns when it could not reach the management service to deregister.
 
 ## The NetBird daemon did not come up
 

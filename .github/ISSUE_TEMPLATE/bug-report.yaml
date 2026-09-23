@@ -1,0 +1,79 @@
+name: Bug report
+description: The action failed, or did something it should not have.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check [TROUBLESHOOTING.md](https://github.com/ankurk91/netbird-action/blob/main/TROUBLESHOOTING.md) first - most failures are listed there.
+
+        **Never paste a setup key.** Security issues go through [private reporting](https://github.com/ankurk91/netbird-action/security/advisories/new), not here.
+
+  - type: input
+    id: action-version
+    attributes:
+      label: Action version
+      description: The ref after `@` in `uses:`.
+      placeholder: v2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: runner
+    attributes:
+      label: Runner
+      options:
+        - GitHub-hosted
+        - Self-hosted
+    validations:
+      required: true
+
+  - type: input
+    id: runner-image
+    attributes:
+      label: Runner image or OS
+      placeholder: ubuntu-24.04
+    validations:
+      required: true
+
+  - type: input
+    id: netbird-version
+    attributes:
+      label: NetBird client version
+      description: Printed in the install step of the job log.
+      placeholder: 0.67.0
+
+  - type: dropdown
+    id: management
+    attributes:
+      label: Management service
+      options:
+        - NetBird Cloud
+        - Self-hosted
+    validations:
+      required: true
+
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow step
+      description: The step that uses the action. Replace the setup key with `***`.
+      render: yaml
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Job log
+      description: "The action's step and its `Post` step, run with `diagnostics: true`."
+      render: text
+    validations:
+      required: true

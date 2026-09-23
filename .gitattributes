@@ -2,8 +2,6 @@
 
 *.jpg binary
 
-dist/** linguist-generated=true
-
 # Keep dev-only files out of release tarballs.
 .editorconfig export-ignore
 .gitattributes export-ignore

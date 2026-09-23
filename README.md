@@ -16,12 +16,12 @@ node.
 
 ## Setup
 
-1. In the NetBird dashboard, open Settings-> **Setup Keys** and create one for your runners:
+1. In the NetBird dashboard, open Settings → **Setup Keys** and create one for your runners:
 
-- Turn on **Ephemeral Peers**. 
-- **One-off** if a single job uses it, **reusable** otherwise.
-- Set a proper expiry
-- Give it a group your access policies already allow, so the runner can reach what it needs.
+   - Turn on **Ephemeral Peers**.
+   - **One-off** if a single job uses it, **reusable** otherwise.
+   - Set a proper expiry.
+   - Give it a group your access policies already allow, so the runner can reach what it needs.
 
 2. Add the key as a repository secret named `NETBIRD_SETUP_KEY`.
 
@@ -86,6 +86,10 @@ There is no disconnect step to add — see [Cleanup](#cleanup).
 > [!WARNING]
 > An exit node carries `0.0.0.0/0`, so the runner's connection to GitHub goes through it too. If the exit node cannot
 > reach GitHub, the job hangs after this step rather than failing.
+
+> [!NOTE]
+> Selecting an exit node deselects the other networks the runner has received by then, so `exit-node` does not mix
+> with private network routes.
 
 ## Inputs
 

@@ -83,9 +83,9 @@ fi
 read -r -a extra_args <<< "$(printf '%s' "$EXTRA_ARGS" | tr '\n\t' '  ')"
 up_args+=("${extra_args[@]}")
 
-# A runner that manages its own client is already on a network, and the login
-# below replaces that session rather than adding to it. The cleanup cannot put it
-# back, so it says so instead of leaving the runner quietly off its own network.
+# On a runner already connected, `netbird up` prints "Already connected" and keeps
+# that session: the key, URL and name below are never applied. The cleanup must
+# not deregister a peer the action did not create.
 if sudo netbird status --check startup > /dev/null 2>&1; then
   save_state NB_WAS_LOGGED_IN true
 fi
@@ -133,8 +133,10 @@ if [ -n "$EXIT_NODE" ]; then
 
   # The route only exists on this peer once the management service has pushed a
   # network map naming it, which lands after the login the loop above waited on.
+  # Match the whole ID: a substring hit on `prod` would stop at `prod-exit`.
   for _ in $(seq "$TIMEOUT"); do
-    if sudo netbird routes ls | grep -qF "$EXIT_NODE"; then
+    if sudo netbird routes ls 2> /dev/null |
+      awk -v id="$EXIT_NODE" '$1 == "-" && $2 == "ID:" && $3 == id { found = 1 } END { exit !found }'; then
       route_available=1
       break
     fi
@@ -149,8 +151,8 @@ if [ -n "$EXIT_NODE" ]; then
     exit 1
   fi
 
-  # Replaces the current selection, so from here the runner's traffic for that
-  # network - the whole internet, for an exit node - goes through it.
+  # Replace, not --append: it keeps a single exit node on every client version,
+  # at the cost of deselecting the other networks this peer knows right now.
   sudo netbird routes select "$EXIT_NODE"
   save_state NB_EXIT_NODE "$EXIT_NODE"
   echo 'exit node selected'

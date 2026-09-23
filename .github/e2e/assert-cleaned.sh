@@ -4,8 +4,8 @@
 #
 # The post step cannot be observed from inside the job it belongs to - it runs
 # after every step, including the ones that could assert on it. So the cleanup is
-# run here as a step of its own, with the state a real run records, and the post
-# step that follows this job then finds its own marker and does nothing.
+# run here as a step of its own, with the state a real run records. The workflow
+# leaves `cleanup` off, so the post step skips and never touches it.
 set -euo pipefail
 
 API_URL="${API_URL:-http://localhost:8081}"
@@ -52,9 +52,7 @@ fi
 
 echo "the server no longer has a peer at $NETBIRD_IP"
 
-# The post step runs this a second time at the end of every job, so a second pass
-# has to be harmless. It is also the only part of the post step this job can
-# check for itself.
+# A second pass proves the cleanup is harmless when the peer is already gone.
 echo '=== Running the cleanup again ==='
 STATE_NB_CONNECTED=true STATE_NB_INSTALLED=true bash src/cleanup.sh
 
