@@ -9,7 +9,7 @@ updates:
       default-days: 7
 
   - package-ecosystem: "docker-compose"
-    directory: "/.github/e2e"
+    directory: "/tests"
     schedule:
       interval: cron
       cronjob: "0 0 15 * *"

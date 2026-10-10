@@ -45,7 +45,7 @@ jobs:
       # real network map back - the parts no amount of mocking would cover.
       - name: Start a throwaway NetBird server
         id: server
-        run: bash .github/e2e/start-server.sh
+        run: bash tests/start-server.sh
 
       - name: Join the network using this action
         id: netbird
@@ -60,14 +60,14 @@ jobs:
           NETBIRD_IP: ${{ steps.netbird.outputs.netbird-ip }}
           NETBIRD_PAT: ${{ steps.server.outputs.pat }}
           PEER_NAME: gh-${{ github.run_id }}-${{ github.run_attempt }}
-        run: bash .github/e2e/assert-connected.sh
+        run: bash tests/assert-connected.sh
 
       # Runs the action's own DNS wait against this network, so the input is
       # exercised against a real resolver rather than only a stubbed one.
       - name: Assert the DNS wait works here
         env:
           NETBIRD_IP: ${{ steps.netbird.outputs.netbird-ip }}
-        run: bash .github/e2e/assert-dns-check.sh
+        run: bash tests/assert-dns-check.sh
 
       # Runs while the throwaway server is still up, so the assertion can ask it
       # whether the peer is really gone rather than only asking the client.
@@ -75,7 +75,7 @@ jobs:
         env:
           NETBIRD_IP: ${{ steps.netbird.outputs.netbird-ip }}
           NETBIRD_PAT: ${{ steps.server.outputs.pat }}
-        run: bash .github/e2e/assert-cleaned.sh
+        run: bash tests/assert-cleaned.sh
 
       - name: Show the server side
         if: always()
@@ -98,7 +98,7 @@ jobs:
           persist-credentials: false
 
       - name: Run the dns-check cases
-        run: bash .github/e2e/test-dns-check.sh
+        run: bash tests/test-dns-check.sh
 
   # The e2e job connects with no extra flags, so a flag list that lost entries on
   # the way to the client would still connect and still pass there. Stubbing the
@@ -114,7 +114,7 @@ jobs:
           persist-credentials: false
 
       - name: Run the connect args cases
-        run: bash .github/e2e/test-connect-args.sh
+        run: bash tests/test-connect-args.sh
 
   # The e2e job above always installs whatever is newest, so the 'version' input
   # only gets exercised here. One architecture is enough: this is about which
@@ -154,4 +154,4 @@ jobs:
         env:
           EXPECTED_VERSION: ${{ matrix.expected }}
           GITHUB_TOKEN: ${{ github.token }}
-        run: bash .github/e2e/assert-install.sh
+        run: bash tests/assert-install.sh
