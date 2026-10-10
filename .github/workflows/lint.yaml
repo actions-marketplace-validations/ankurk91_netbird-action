@@ -13,7 +13,8 @@ on:
       - '**.mjs'
       - 'action.yaml'
       - '.github/workflows/**'
-      - '.github/actionlint.yaml'
+      - '.github/jactionlint.yaml'
+      - '.github/dependabot.yml'
   pull_request:
     branches:
       - main
@@ -23,7 +24,8 @@ on:
       - '**.mjs'
       - 'action.yaml'
       - '.github/workflows/**'
-      - '.github/actionlint.yaml'
+      - '.github/jactionlint.yaml'
+      - '.github/dependabot.yml'
 
 permissions:
   contents: read
@@ -40,6 +42,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Run the sh-checker
         uses: luizm/action-sh-checker@v0.10.0
@@ -52,8 +56,8 @@ jobs:
       - name: Check the JavaScript parses
         run: node --check src/main.mjs && node --check src/post.mjs
 
-      # The image bundles shellcheck; `-pyflakes=` turns off the Python check.
-      - name: Lint GitHub Actions workflows
-        uses: docker://rhysd/actionlint:1.7.12
+      # The image bundles shellcheck; `--pyflakes=` turns off the Python check.
+      - name: Lint GitHub Actions workflows and Dependabot config
+        uses: docker://ghcr.io/jdx/jactionlint:2.0.2
         with:
-          args: -color -pyflakes=
+          args: --color --pyflakes=
