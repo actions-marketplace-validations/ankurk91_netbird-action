@@ -3,13 +3,15 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 0 15 * *"
     cooldown:
       default-days: 7
 
   - package-ecosystem: "docker-compose"
     directory: "/.github/e2e"
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 0 15 * *"
     cooldown:
       default-days: 7
