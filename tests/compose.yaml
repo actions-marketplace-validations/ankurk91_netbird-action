@@ -3,7 +3,7 @@
 services:
   netbird-server:
     # Pinned so an upstream release cannot turn a green run red on its own.
-    image: netbirdio/netbird-server:0.80.0
+    image: netbirdio/netbird-server:0.81.3
     container_name: netbird-server
     # Host network so localhost means the same thing to the server, its IdP and
     # the client. See config.yaml.
